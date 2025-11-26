@@ -1,51 +1,52 @@
+import java.math.BigInteger;
+
 public class RatNum {
 
-    private int numerator;
-    private int denominator;
+    private BigInteger numerator;
+    private BigInteger denominator;
+
+    private RatNum(BigInteger n, BigInteger d){
+        if (d == BigInteger.ZERO) throw  new  NumberFormatException("Denominator = 0");
+        BigInteger m = n.gcd(d);
+        if (d.max(BigInteger.ZERO) == BigInteger.ZERO){
+            n = n.divide(m);
+            d = d.divide(m);
+            numerator = n.negate();
+            denominator = d.negate();
+        } else {
+            n = n.divide(m);
+            d = d.divide(m);
+            numerator = n;
+            denominator = d;
+        }
+    }
 
     /**
      * Base case of RatNum, sets numerator to 0 and denominator to 1
      */
     public RatNum(){
-        numerator = 0;
-        denominator = 1;
+        numerator = BigInteger.ZERO;
+        denominator = BigInteger.ONE;
     }
     /**
      * Constructs a rational number a/1.
-     * @param a numerator
+     * @param n numerator
      */
-    public RatNum(int a){
-        numerator = a;
-        denominator = 1;
+    public RatNum(int n){
+        numerator = BigInteger.valueOf(n);
+        denominator = BigInteger.ONE;
     }
     /**
      * Constructs a rational number a/b in reduced form.
      * Reduces by gcd (a, b)
      * If one number is negative, makes numerator negative and denominator positive
      * Otherwise both positive
-     * @param a numerator
-     * @param b denominator
+     * @param n numerator
+     * @param d denominator
      * @throws NumberFormatException if b == 0
      */
-    public RatNum(int a, int b){
-        if (b == 0) throw  new  NumberFormatException("Denominator = 0");
-        int m = gcd(a, b);
-        if (a > 0 && b < 0) {
-            a = a/m;
-            b = b/m;
-            numerator = -a;
-            denominator = -b;
-        } else if (a < 0 && b < 0) {
-            a = a/m;
-            b = b/m;
-            numerator = -a;
-            denominator = -b;
-        } else {
-            a = a/m;
-            b = b/m;
-            numerator = a;
-            denominator = b;
-        }
+    public RatNum(int n, int d){
+        this(BigInteger.valueOf(n), BigInteger.valueOf(d));
     }
      /**
      * Produces a new RatNum with the same parameters as the input RatNum
@@ -58,18 +59,18 @@ public class RatNum {
 
     /**
      * Method for getting the numerator of a RatNum
-     * @return int for numerator
+     * @return converts BigInt to int and returns as numerator
      */
     public int getNumerator() {
-        return numerator;
+        return numerator.intValue();
     }
 
     /**
      * Method for getting the denominator of a RatNum
-     * @return int for denominator
+     * @return converts BigInt to int and returns as denominator
      */
     public int getDenominator() {
-        return denominator;
+        return denominator.intValue();
     }
 
     /**
@@ -118,7 +119,7 @@ public class RatNum {
         if (this == r) return true;
         if (r == null || getClass() != r.getClass()) return false;
         RatNum other = (RatNum) r;
-        return this.numerator == other.numerator && this.denominator == other.denominator;
+        return this.numerator.equals(other.numerator) && this.denominator.equals(other.denominator);
     }
 
     /**
@@ -128,7 +129,7 @@ public class RatNum {
      */
     public boolean lessThan(RatNum r)
     {
-        return (this.numerator * r.denominator) < (r.numerator * this.denominator);
+        return (this.numerator.multiply(r.denominator)).compareTo(r.numerator.multiply(this.denominator)) < 0;
     }
 
     /**
@@ -137,8 +138,8 @@ public class RatNum {
      * @return new, simplified rational number
      */
     public RatNum add (RatNum r){
-        int newNumerator = (this.numerator * r.denominator) + (r.numerator * this.denominator);
-        int newDenominator = this.denominator * r.denominator;
+        BigInteger newNumerator = (this.numerator.multiply(r.denominator)).add(r.numerator.multiply(this.denominator));
+        BigInteger newDenominator = this.denominator.multiply(r.denominator);
         return new RatNum(newNumerator, newDenominator);
     }
 
@@ -148,8 +149,8 @@ public class RatNum {
      * @return new, simplified rational number
      */
     public RatNum sub (RatNum r){
-        int newNumerator = (this.numerator * r.denominator) - (r.numerator * this.denominator);
-        int newDenominator = this.denominator * r.denominator;
+        BigInteger newNumerator = (this.numerator.multiply(r.denominator)).subtract(r.numerator.multiply(this.denominator));
+        BigInteger newDenominator = this.denominator.multiply(r.denominator);
         return new RatNum(newNumerator, newDenominator);
     }
 
@@ -159,8 +160,8 @@ public class RatNum {
      * @return new, simplified rational number
      */
     public RatNum mul (RatNum r){
-        int newNumerator = this.numerator * r.numerator;
-        int newDenominator = this.denominator * r.denominator;
+        BigInteger newNumerator = (this.numerator.multiply(r.numerator));
+        BigInteger newDenominator = this.denominator.multiply(r.denominator);
         return new RatNum(newNumerator, newDenominator);
     }
 
@@ -170,8 +171,32 @@ public class RatNum {
      * @return new, simplified rational number
      */
     public RatNum div (RatNum r){
-        int newNumerator = this.numerator * r.denominator;
-        int newDenominator = this.denominator * r.numerator;
+        BigInteger newNumerator = (this.numerator.multiply(r.denominator));
+        BigInteger newDenominator = this.denominator.multiply(r.numerator);
         return new RatNum(newNumerator, newDenominator);
+    }
+    /**
+     * Integer part extraction for rational numbers.
+     * @return the integer part of this rational number
+     */
+    public int intPart() {
+        return numerator.divide(denominator).intValue();
+    }
+
+
+    /**
+     * Power funktion for rational numbers.
+     * If k = 0, returns 1/1.
+     * @param k the reference int which is used as the exponent
+     * @return new, simplified, rational number that has been raised to the power of k.
+     */
+    public RatNum pow(int k) {
+        if (k == 0){
+            return new RatNum (1,1);
+        }else {
+            BigInteger newNumerator = this.numerator.pow(k);
+            BigInteger newDenominator = this.denominator.pow(k);
+            return new RatNum(newNumerator, newDenominator);
+        }
     }
 }
